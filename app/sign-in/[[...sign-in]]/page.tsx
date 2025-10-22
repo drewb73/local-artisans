@@ -18,7 +18,19 @@ export default function Page() {
             <div className="text-center mb-8 md:hidden">
               <h1 className="text-3xl font-bold text-gray-800">Local Artisans</h1>
             </div>
-            <SignIn />
+            
+            <SignIn 
+              routing="path"
+              path="/sign-in"
+              signUpUrl="/sign-up"
+              redirectUrl="/"
+              appearance={{
+                elements: {
+                  formButtonPrimary: 'bg-[#228B22] hover:bg-green-700',
+                  footerActionLink: 'text-[#228B22] hover:text-green-700',
+                }
+              }}
+            />
           </div>
           
           {/* Footer */}
