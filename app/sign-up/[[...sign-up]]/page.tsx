@@ -6,7 +6,7 @@ import { useSignUp } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 
 export default function SignUpPage() {
-  const { isLoaded, signUp } = useSignUp()
+  const { isLoaded, signUp, setActive } = useSignUp()
   const router = useRouter()
   
   const [userType, setUserType] = useState<'customer' | 'business'>('customer')
@@ -17,6 +17,8 @@ export default function SignUpPage() {
   const [businessName, setBusinessName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [verificationPending, setVerificationPending] = useState(false)
+  const [verificationCode, setVerificationCode] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,22 +40,20 @@ export default function SignUpPage() {
         lastName: lastName,
       })
 
-      if (result.status === 'complete') {
-        // Prepare user metadata for your database
-        const userMetadata = {
-          userType,
-          businessName: userType === 'business' ? businessName : undefined,
-        }
+      // Send email verification code
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
 
-        // You can store this in your database later
-        console.log('User metadata:', userMetadata)
-        
-        // Redirect to appropriate page based on user type
-        router.push('/home')
-      } else {
-        // Handle cases where more steps are needed (email verification, etc.)
-        console.log('Sign up status:', result.status)
+      // Store user type in local storage temporarily
+      localStorage.setItem('userType', userType)
+      
+      // If business user, also store business name
+      if (userType === 'business' && businessName) {
+        localStorage.setItem('businessName', businessName)
       }
+
+      setVerificationPending(true)
+      setError('') // Clear any previous errors
+
     } catch (err: any) {
       setError(err.errors?.[0]?.message || 'Something went wrong')
       console.error('Error during sign up:', err)
@@ -62,6 +62,102 @@ export default function SignUpPage() {
     }
   }
 
+  const handleVerification = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError('')
+
+    if (!isLoaded || !signUp) {
+      setError('Authentication not ready')
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      // Verify the email code
+      const completeSignUp = await signUp.attemptEmailAddressVerification({
+        code: verificationCode,
+      })
+
+      if (completeSignUp.status === 'complete') {
+        // Set the user as active and create session
+        await setActive({ session: completeSignUp.createdSessionId })
+        
+        // Redirect to home page
+        router.push('/home')
+      } else {
+        setError('Verification failed. Please try again.')
+        console.log('Verification status:', completeSignUp.status)
+      }
+    } catch (err: any) {
+      setError(err.errors?.[0]?.message || 'Invalid verification code')
+      console.error('Error during verification:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // If verification is pending, show verification form
+  if (verificationPending) {
+    return (
+      <div className="min-h-screen mediterranean-bg flex items-center justify-center p-8">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-lg p-8">
+            <div className="text-center mb-6">
+              <h1 className="text-2xl font-bold text-gray-800">Verify Your Email</h1>
+              <p className="text-gray-600 mt-2">
+                We sent a verification code to {email}
+              </p>
+            </div>
+
+            <form onSubmit={handleVerification} className="space-y-6">
+              <div>
+                <label htmlFor="verificationCode" className="block text-sm font-medium text-gray-700 mb-2">
+                  Verification Code *
+                </label>
+                <input
+                  id="verificationCode"
+                  name="verificationCode"
+                  type="text"
+                  required
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#228B22] focus:border-transparent"
+                  placeholder="Enter the code from your email"
+                />
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-[#228B22] text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? 'Verifying...' : 'Verify Email'}
+              </button>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setVerificationPending(false)}
+                  className="text-[#228B22] hover:text-green-700 font-medium"
+                >
+                  Back to sign up
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Original sign-up form
   return (
     <div className="min-h-screen mediterranean-bg flex">
       {/* Left Side - Brand */}
@@ -79,6 +175,9 @@ export default function SignUpPage() {
             <div className="text-center mb-8 md:hidden">
               <h1 className="text-3xl font-bold text-gray-800">Local Artisans</h1>
             </div>
+
+            {/* Clerk CAPTCHA Element */}
+            <div id="clerk-captcha"></div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* User Type Selection */}
