@@ -1,7 +1,7 @@
 // app/sign-up/[[...sign-up]]/page.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSignUp } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 
@@ -19,6 +19,22 @@ export default function SignUpPage() {
   const [error, setError] = useState('')
   const [verificationPending, setVerificationPending] = useState(false)
   const [verificationCode, setVerificationCode] = useState('')
+  const [timeLeft, setTimeLeft] = useState(60) // 60 seconds expiration
+  const [canResend, setCanResend] = useState(false)
+
+  // Countdown timer for verification code expiration
+  useEffect(() => {
+    if (!verificationPending || timeLeft <= 0) return
+
+    const timer = setTimeout(() => {
+      setTimeLeft(timeLeft - 1)
+      if (timeLeft - 1 === 0) {
+        setCanResend(true)
+      }
+    }, 1000)
+
+    return () => clearTimeout(timer)
+  }, [verificationPending, timeLeft])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -52,6 +68,8 @@ export default function SignUpPage() {
       }
 
       setVerificationPending(true)
+      setTimeLeft(60) // Reset timer
+      setCanResend(false)
       setError('') // Clear any previous errors
 
     } catch (err: any) {
@@ -62,8 +80,33 @@ export default function SignUpPage() {
     }
   }
 
+  const handleResendCode = async () => {
+    if (!isLoaded || !signUp || !canResend) return
+
+    setIsLoading(true)
+    setError('')
+
+    try {
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
+      setTimeLeft(60)
+      setCanResend(false)
+      setError('Verification code sent again!')
+    } catch (err: any) {
+      setError(err.errors?.[0]?.message || 'Failed to resend code')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleVerification = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Check if code has expired
+    if (timeLeft <= 0) {
+      setError('Verification code has expired. Please request a new one.')
+      return
+    }
+
     setIsLoading(true)
     setError('')
 
@@ -106,8 +149,19 @@ export default function SignUpPage() {
             <div className="text-center mb-6">
               <h1 className="text-2xl font-bold text-gray-800">Verify Your Email</h1>
               <p className="text-gray-600 mt-2">
-                We sent a verification code to {email}
+                We sent a verification code to <strong>{email}</strong>
               </p>
+              
+              {/* Timer Display */}
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-700">
+                  {timeLeft > 0 ? (
+                    <>Code expires in <strong>{timeLeft} seconds</strong></>
+                  ) : (
+                    <span className="text-red-600">Verification code has expired</span>
+                  )}
+                </p>
+              </div>
             </div>
 
             <form onSubmit={handleVerification} className="space-y-6">
@@ -123,32 +177,59 @@ export default function SignUpPage() {
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#228B22] focus:border-transparent"
-                  placeholder="Enter the code from your email"
+                  placeholder="Enter the 6-digit code"
+                  maxLength={6}
                 />
               </div>
 
               {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600">{error}</p>
+                <div className={`p-3 rounded-lg ${
+                  error.includes('expired') || error.includes('Invalid') 
+                    ? 'bg-red-50 border border-red-200' 
+                    : 'bg-green-50 border border-green-200'
+                }`}>
+                  <p className={`text-sm ${
+                    error.includes('expired') || error.includes('Invalid') 
+                      ? 'text-red-600' 
+                      : 'text-green-600'
+                  }`}>
+                    {error}
+                  </p>
                 </div>
               )}
 
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || timeLeft <= 0}
                 className="w-full bg-[#228B22] text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Verifying...' : 'Verify Email'}
+                {isLoading ? 'Verifying...' : timeLeft <= 0 ? 'Code Expired' : 'Verify Email'}
               </button>
 
-              <div className="text-center">
+              <div className="text-center space-y-3">
                 <button
                   type="button"
-                  onClick={() => setVerificationPending(false)}
-                  className="text-[#228B22] hover:text-green-700 font-medium"
+                  onClick={handleResendCode}
+                  disabled={!canResend || isLoading}
+                  className="text-[#228B22] hover:text-green-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Back to sign up
+                  {canResend ? 'Resend verification code' : `Resend available in ${timeLeft}s`}
                 </button>
+                
+                <div className="border-t pt-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVerificationPending(false)
+                      setTimeLeft(60)
+                      setCanResend(false)
+                      setError('')
+                    }}
+                    className="text-gray-600 hover:text-gray-800 font-medium"
+                  >
+                    Back to sign up
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -157,7 +238,7 @@ export default function SignUpPage() {
     )
   }
 
-  // Original sign-up form
+  // Original sign-up form (without CAPTCHA)
   return (
     <div className="min-h-screen mediterranean-bg flex">
       {/* Left Side - Brand */}
@@ -176,8 +257,7 @@ export default function SignUpPage() {
               <h1 className="text-3xl font-bold text-gray-800">Local Artisans</h1>
             </div>
 
-            {/* Clerk CAPTCHA Element */}
-            <div id="clerk-captcha"></div>
+            {/* CAPTCHA removed - using email verification instead */}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* User Type Selection */}
