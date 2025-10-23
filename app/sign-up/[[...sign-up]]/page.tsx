@@ -49,7 +49,7 @@ export default function SignUpPage() {
         console.log('User metadata:', userMetadata)
         
         // Redirect to appropriate page based on user type
-        router.push(userType === 'business' ? '/onboarding/business' : '/onboarding/customer')
+        router.push('/home')
       } else {
         // Handle cases where more steps are needed (email verification, etc.)
         console.log('Sign up status:', result.status)
