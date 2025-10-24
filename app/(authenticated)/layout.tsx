@@ -14,24 +14,24 @@ export default function AuthenticatedLayout({
   const pathname = usePathname()
   const { userType, isLoading } = useUserType()
 
-  // Navigation items
-  const navItems = [
+  // Community User Navigation
+  const communityNavItems = [
     { name: 'Home', href: '/home', icon: '🏠' },
     { name: 'Profile', href: '/profile', icon: '👤' },
-    { name: 'Businesses', href: '/businesses', icon: '🏪' },
-    { name: 'Products', href: '/products', icon: '🛍️' },
+    { name: 'Discover', href: '/discover', icon: '🔍' },
+    { name: 'Favorites', href: '/favorites', icon: '❤️' },
   ]
 
-  // Business-specific navigation items
+  // Business User Navigation
   const businessNavItems = [
     { name: 'Home', href: '/home', icon: '🏠' },
-    { name: 'Dashboard', href: '/business/dashboard', icon: '📊' },
-    { name: 'My Business', href: '/business/profile', icon: '🏢' },
-    { name: 'Products', href: '/business/products', icon: '📦' },
-    { name: 'Orders', href: '/business/orders', icon: '📋' },
+    { name: 'Profile', href: '/profile', icon: '👤' },
+    { name: 'Analytics Dashboard', href: '/analytics', icon: '📊' },
+    { name: 'Discover', href: '/discover', icon: '🔍' },
+    { name: 'Favorites', href: '/favorites', icon: '❤️' },
   ]
 
-  const currentNavItems = userType === 'business' ? businessNavItems : navItems
+  const currentNavItems = userType === 'business' ? businessNavItems : communityNavItems
 
   if (isLoading) {
     return (
@@ -59,24 +59,30 @@ export default function AuthenticatedLayout({
           <p className="text-sm text-gray-600 mt-1">Discover local makers</p>
         </div>
 
-        {/* User Profile Section */}
+        {/* User Profile Section - Updated Layout */}
         <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
+          <div className="flex flex-col items-center space-y-3">
             {/* Default Profile Picture */}
-            <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
               </svg>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
+            
+            {/* User/Business Name */}
+            <div className="text-center">
+              <p className="text-sm font-medium text-gray-900">
+                {userType === 'business' ? 'Your Business Name' : 'User Name'}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
                 {userType === 'business' ? 'Business Account' : 'Community Member'}
               </p>
-              <p className="text-xs text-gray-500 truncate">
-                {userType === 'business' ? 'Manage your business' : 'Explore local artisans'}
-              </p>
             </div>
-            <UserButton />
+            
+            {/* UserButton positioned below the name */}
+            <div className="pt-2">
+              <UserButton />
+            </div>
           </div>
         </div>
 
@@ -104,10 +110,29 @@ export default function AuthenticatedLayout({
           </ul>
         </nav>
 
-        {/* Footer/Sign Out */}
+        {/* Settings at the bottom */}
         <div className="p-4 border-t border-gray-200">
-          <div className="text-xs text-gray-500 text-center">
-            © 2025 Local Artisans
+          <ul className="space-y-2">
+            <li>
+              <Link
+                href="/settings"
+                className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition ${
+                  pathname === '/settings'
+                    ? 'bg-[#8B7355] text-white'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <span className="text-lg">⚙️</span>
+                <span className="font-medium">Settings</span>
+              </Link>
+            </li>
+          </ul>
+          
+          {/* Footer */}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="text-xs text-gray-500 text-center">
+              © 2025 Local Artisans
+            </div>
           </div>
         </div>
       </div>
