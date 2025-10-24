@@ -19,7 +19,7 @@ export default function SignUpPage() {
   const [error, setError] = useState('')
   const [verificationPending, setVerificationPending] = useState(false)
   const [verificationCode, setVerificationCode] = useState('')
-  const [timeLeft, setTimeLeft] = useState(60) // 60 seconds expiration
+  const [timeLeft, setTimeLeft] = useState(60)
   const [canResend, setCanResend] = useState(false)
 
   // Countdown timer for verification code expiration
@@ -59,7 +59,7 @@ export default function SignUpPage() {
       // Send email verification code
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
 
-      // Store user type in local storage temporarily
+      // Store user type in local storage
       localStorage.setItem('userType', userType)
       
       // If business user, also store business name
@@ -68,9 +68,9 @@ export default function SignUpPage() {
       }
 
       setVerificationPending(true)
-      setTimeLeft(60) // Reset timer
+      setTimeLeft(60)
       setCanResend(false)
-      setError('') // Clear any previous errors
+      setError('')
 
     } catch (err: any) {
       setError(err.errors?.[0]?.message || 'Something went wrong')
@@ -238,7 +238,7 @@ export default function SignUpPage() {
     )
   }
 
-  // Original sign-up form (without CAPTCHA)
+  // Original sign-up form
   return (
     <div className="min-h-screen mediterranean-bg flex">
       {/* Left Side - Brand */}
@@ -256,8 +256,6 @@ export default function SignUpPage() {
             <div className="text-center mb-8 md:hidden">
               <h1 className="text-3xl font-bold text-gray-800">Local Artisans</h1>
             </div>
-
-            {/* CAPTCHA removed - using email verification instead */}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* User Type Selection */}
