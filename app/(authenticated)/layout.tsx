@@ -4,7 +4,7 @@
 import { UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useUserType } from '../../lib/hooks/useUserTpye'
+import { useUserType } from '../../lib/hooks/useUserType'
 
 export default function AuthenticatedLayout({
   children,
@@ -59,7 +59,7 @@ export default function AuthenticatedLayout({
           <p className="text-sm text-gray-600 mt-1">Discover local makers</p>
         </div>
 
-        {/* User Profile Section - Updated Layout */}
+        {/* User Profile Section - Cleaned up without UserButton */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex flex-col items-center space-y-3">
             {/* Default Profile Picture */}
@@ -77,11 +77,6 @@ export default function AuthenticatedLayout({
               <p className="text-xs text-gray-500 mt-1">
                 {userType === 'business' ? 'Business Account' : 'Community Member'}
               </p>
-            </div>
-            
-            {/* UserButton positioned below the name */}
-            <div className="pt-2">
-              <UserButton />
             </div>
           </div>
         </div>
@@ -139,12 +134,13 @@ export default function AuthenticatedLayout({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
-        {/* Top Bar */}
+        {/* Top Bar with UserButton */}
         <header className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-semibold text-gray-800">
               {userType === 'business' ? 'Business Dashboard' : 'Community Hub'}
             </h1>
+            <UserButton />
           </div>
         </header>
 

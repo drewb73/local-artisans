@@ -1,7 +1,7 @@
 // app/(authenticated)/home/page.tsx
 'use client'
 
-import { useUserType } from '../../../lib/hooks/useUserTpye'
+import { useUserType } from '../../../lib/hooks/useUserType'
 
 export default function HomePage() {
   const { userType, isLoading } = useUserType()
