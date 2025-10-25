@@ -4,7 +4,7 @@
 import { UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useUserType } from '../../lib/hooks/useUserType'
+import { useUserType } from '../../lib/hooks/useUserTpye'
 
 export default function AuthenticatedLayout({
   children,
