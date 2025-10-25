@@ -134,13 +134,36 @@ export default function AuthenticatedLayout({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
-        {/* Top Bar with UserButton */}
+        {/* Top Bar with Emoji Icons and UserButton */}
         <header className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-semibold text-gray-800">
               {userType === 'business' ? 'Business Dashboard' : 'Community Hub'}
             </h1>
-            <UserButton />
+            
+            {/* Right side emoji icons */}
+            <div className="flex items-center space-x-4">
+              {/* Notifications - Bell emoji */}
+              <button className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition">
+                <span className="text-xl">🔔</span>
+                {/* Notification badge - hidden for now */}
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">
+                  3
+                </span>
+              </button>
+
+              {/* Messages - Envelope emoji */}
+              <button className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition">
+                <span className="text-xl">✉️</span>
+                {/* Message badge - hidden for now */}
+                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">
+                  5
+                </span>
+              </button>
+
+              {/* User Profile */}
+              <UserButton />
+            </div>
           </div>
         </header>
 
