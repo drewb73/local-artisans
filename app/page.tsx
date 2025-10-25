@@ -1,4 +1,6 @@
-import { SignedIn, SignedOut, UserButton, SignOutButton } from '@clerk/nextjs'
+// app/page.tsx
+import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+import Link from 'next/link'
 
 export default function Home() {
   return (
@@ -28,24 +30,17 @@ export default function Home() {
       </SignedOut>
 
       <SignedIn>
-        {/* Show welcome dashboard for logged in users */}
+        {/* Redirect to /home for signed in users */}
         <div className="min-h-screen mediterranean-bg flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-5xl font-bold text-gray-800 mb-4">Welcome!</h1>
-            <p className="text-xl text-gray-600 mb-8">You're successfully signed in to Local Artisans</p>
-            <div className="flex flex-col items-center space-y-4">
-              <div className="flex items-center space-x-4">
-                <UserButton />
-                <span className="text-gray-600">Profile</span>
-              </div>
-              <SignOutButton redirectUrl="/">
-                <button className="bg-red-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-600 transition">
-                  Sign Out
-                </button>
-              </SignOutButton>
-            </div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B7355] mx-auto"></div>
+            <p className="mt-4 text-gray-600">Redirecting to your dashboard...</p>
           </div>
         </div>
+        {/* This will trigger a redirect to /home */}
+        <script dangerouslySetInnerHTML={{
+          __html: `window.location.href = '/home'`
+        }} />
       </SignedIn>
     </>
   )
