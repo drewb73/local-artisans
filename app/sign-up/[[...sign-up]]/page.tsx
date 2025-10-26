@@ -126,6 +126,50 @@ export default function SignUpPage() {
         // Set the user as active and create session
         await setActive({ session: completeSignUp.createdSessionId })
         
+        // ✅ CREATE PROFILE IN OUR DATABASE
+        const userType = localStorage.getItem('userType')
+        const businessName = userType === 'business' ? localStorage.getItem('businessName') : undefined
+
+        console.log('Creating profile for:', {
+          firstName,
+          lastName, 
+          userType,
+          businessName
+        })
+
+        try {
+          const response = await fetch('/api/profile', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              firstName: firstName,
+              lastName: lastName,
+              businessName: businessName,
+              bio: ''
+            }),
+          })
+
+          console.log('Profile API response status:', response.status)
+
+          if (response.ok) {
+            const data = await response.json()
+            console.log('✅ Profile created successfully:', data)
+          } else {
+            const errorData = await response.json()
+            console.error('❌ Failed to create profile:', errorData)
+            // Don't block user - continue to home page
+          }
+        } catch (profileError) {
+          console.error('❌ Error creating profile:', profileError)
+          // Don't block user - continue to home page
+        }
+
+        // Clear local storage
+        localStorage.removeItem('userType')
+        localStorage.removeItem('businessName')
+        
         // Redirect to home page
         router.push('/home')
       } else {

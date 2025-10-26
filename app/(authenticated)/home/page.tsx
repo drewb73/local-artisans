@@ -2,11 +2,34 @@
 'use client'
 
 import { useUserType } from '../../../lib/hooks/useUserType'
+import { useState, useEffect } from 'react'
 
 export default function HomePage() {
   const { userType, isLoading } = useUserType()
+  const [userProfile, setUserProfile] = useState<any>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
 
-  if (isLoading) {
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch('/api/profile')
+        if (response.ok) {
+          const data = await response.json()
+          setUserProfile(data.profile)
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile:', error)
+      } finally {
+        setProfileLoading(false)
+      }
+    }
+
+    if (!isLoading) {
+      fetchProfile()
+    }
+  }, [isLoading])
+
+  if (isLoading || profileLoading) {
     return (
       <div className="max-w-4xl">
         <div className="bg-white rounded-2xl shadow-lg p-8">
@@ -25,14 +48,24 @@ export default function HomePage() {
       <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
         <h2 className="text-3xl font-bold text-gray-800 mb-4 text-center">
           {userType === 'business' 
-            ? 'Hello Business User!' 
-            : 'Hello Community User!'}
+            ? `Hello ${userProfile?.businessName || 'Business'}!` 
+            : `Hello ${userProfile?.firstName || 'Community User'}!`}
         </h2>
         <p className="text-gray-600 text-lg text-center">
           {userType === 'business' 
             ? 'Welcome to your business dashboard. Manage your products and connect with customers.' 
             : 'Welcome to the community! Discover amazing local businesses and handmade products.'}
         </p>
+        
+        {/* Show user info if available */}
+        {userProfile && (
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <p className="text-sm text-gray-600">
+              Signed in as: {userProfile.firstName} {userProfile.lastName}
+              {userProfile.businessName && ` • ${userProfile.businessName}`}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Content Area */}

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUserType } from '../../lib/hooks/useUserType'
 import ProtectedRoute from '../../components/ProtectedRoute'
+import { useState, useEffect } from 'react'
 
 export default function AuthenticatedLayout({
   children,
@@ -14,6 +15,29 @@ export default function AuthenticatedLayout({
 }) {
   const pathname = usePathname()
   const { userType, isLoading } = useUserType()
+  const [userProfile, setUserProfile] = useState<any>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
+
+  // Fetch user profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch('/api/profile')
+        if (response.ok) {
+          const data = await response.json()
+          setUserProfile(data.profile)
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile:', error)
+      } finally {
+        setProfileLoading(false)
+      }
+    }
+
+    if (!isLoading) {
+      fetchProfile()
+    }
+  }, [isLoading])
 
   // Community User Navigation
   const communityNavItems = [
@@ -34,7 +58,7 @@ export default function AuthenticatedLayout({
 
   const currentNavItems = userType === 'business' ? businessNavItems : communityNavItems
 
-  if (isLoading) {
+  if (isLoading || profileLoading) {
     return (
       <div className="min-h-screen mediterranean-bg flex">
         <div className="w-64 bg-[#FFFBF0] border-r border-gray-200 animate-pulse">
@@ -71,10 +95,12 @@ export default function AuthenticatedLayout({
                 </svg>
               </div>
               
-              {/* User/Business Name */}
+              {/* User/Business Name - Now using real data */}
               <div className="text-center">
                 <p className="text-sm font-medium text-gray-900">
-                  {userType === 'business' ? 'Your Business Name' : 'User Name'}
+                  {userType === 'business' 
+                    ? userProfile?.businessName || 'Your Business' 
+                    : `${userProfile?.firstName || 'User'} ${userProfile?.lastName || 'Name'}`}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
                   {userType === 'business' ? 'Business Account' : 'Community Member'}
@@ -139,8 +165,11 @@ export default function AuthenticatedLayout({
           {/* Top Bar with darker yellow-brown background */}
           <header className="bg-[#B89B6A] border-b border-[#A68C5F] px-6 py-4">
             <div className="flex justify-between items-center">
+              {/* Header Title - Now using real data */}
               <h1 className="text-xl font-semibold text-white">
-                {userType === 'business' ? 'Business Dashboard' : 'Community Hub'}
+                {userType === 'business' 
+                  ? `${userProfile?.businessName || 'Business'} Dashboard` 
+                  : 'Community Hub'}
               </h1>
               
               {/* Right side emoji icons */}
