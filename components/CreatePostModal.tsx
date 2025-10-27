@@ -21,6 +21,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
     setError('')
 
     try {
+      console.log('🔄 Creating post with:', { title, content })
       const response = await fetch('/api/posts', {
         method: 'POST',
         headers: {
@@ -32,9 +33,21 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
         }),
       })
 
+      console.log('📨 API Response status:', response.status)
+      
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text()
+        console.error('❌ API returned non-JSON response:', text.substring(0, 200))
+        throw new Error('Server returned an invalid response. Please try again.')
+      }
+
+      const data = await response.json()
+      console.log('📦 API Response data:', data)
+
       if (response.ok) {
-        const data = await response.json()
-        console.log('Post created:', data.post)
+        console.log('✅ Post created successfully:', data.post)
         
         // Reset form and close modal
         setTitle('')
@@ -42,12 +55,11 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
         onPostCreated()
         onClose()
       } else {
-        const errorData = await response.json()
-        setError(errorData.error || 'Failed to create post')
+        setError(data.error || 'Failed to create post')
       }
-    } catch (error) {
-      console.error('Error creating post:', error)
-      setError('Failed to create post')
+    } catch (error: any) {
+      console.error('🚨 Error creating post:', error)
+      setError(error.message || 'Failed to create post. Please check your connection and try again.')
     } finally {
       setIsLoading(false)
     }
@@ -63,12 +75,23 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-brightness-50 backdrop-blur-sm"
       onClick={handleOverlayClick}
     >
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+      {/* Modal content */}
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-gray-200">
         <div className="p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Create Post</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-800">Create Post</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
           
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -97,7 +120,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B7355] focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B7355] focus:border-transparent resize-none"
                 placeholder="What would you like to share with the community?"
                 maxLength={1000}
               />
