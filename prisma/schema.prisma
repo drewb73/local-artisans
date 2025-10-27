@@ -18,6 +18,7 @@ model User {
   
   // Relations
   profile Profile?
+  posts   Post[]    // Make sure this line exists
   
   @@map("users")
 }
@@ -26,7 +27,7 @@ model Profile {
   id          String   @id @default(cuid())
   firstName   String
   lastName    String
-  businessName String?  // Only for business users
+  businessName String?
   bio         String?
   avatarUrl   String?
   createdAt   DateTime @default(now())
@@ -37,6 +38,20 @@ model Profile {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("profiles")
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("posts")
 }
 
 enum UserType {

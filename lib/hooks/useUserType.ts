@@ -1,4 +1,4 @@
-// lib/hooks/useUserType.ts
+// lib/hooks/useUserType.ts (simplified version)
 'use client'
 
 import { useUser } from '@clerk/nextjs'
@@ -10,42 +10,33 @@ export function useUserType() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const fetchUserType = async () => {
-      if (isLoaded && user) {
-        try {
-          // Fetch user data from our database API
-          const response = await fetch('/api/profile')
-          if (response.ok) {
-            const data = await response.json()
-            
-            if (data.user) {
-              // Use the userType from our database
-              const dbUserType = data.user.userType.toLowerCase() as 'customer' | 'business'
-              setUserType(dbUserType)
-              
-              // Also update local storage for consistency
-              localStorage.setItem('userType', dbUserType)
-            } else {
-              // Fallback to local storage if no user in database yet
-              const storedType = localStorage.getItem('userType') as 'customer' | 'business' | null
-              setUserType(storedType)
-            }
-          } else {
-            // Fallback if API fails
-            const storedType = localStorage.getItem('userType') as 'customer' | 'business' | null
-            setUserType(storedType)
-          }
-        } catch (error) {
-          console.error('Error fetching user type:', error)
-          // Fallback to local storage
-          const storedType = localStorage.getItem('userType') as 'customer' | 'business' | null
-          setUserType(storedType)
-        }
-      } else if (isLoaded && !user) {
-        // No user signed in
-        setUserType(null)
-      }
+    if (!isLoaded) {
       setIsLoading(false)
+      return
+    }
+
+    if (!user) {
+      setUserType(null)
+      setIsLoading(false)
+      return
+    }
+
+    // Always fetch fresh data from API
+    const fetchUserType = async () => {
+      try {
+        const response = await fetch('/api/profile')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.user?.userType) {
+            const dbUserType = data.user.userType.toLowerCase() as 'customer' | 'business'
+            setUserType(dbUserType)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user type:', error)
+      } finally {
+        setIsLoading(false)
+      }
     }
 
     fetchUserType()

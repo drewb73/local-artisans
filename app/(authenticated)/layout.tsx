@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import { useUserType } from '../../lib/hooks/useUserType'
 import ProtectedRoute from '../../components/ProtectedRoute'
 import { useState, useEffect } from 'react'
+import CreatePostModal from '../../components/CreatePostModal'
 
 export default function AuthenticatedLayout({
   children,
@@ -16,9 +17,9 @@ export default function AuthenticatedLayout({
   const pathname = usePathname()
   const { userType, isLoading } = useUserType()
   const [userProfile, setUserProfile] = useState<any>(null)
-  const [profileLoading, setProfileLoading] = useState(true)
+  const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false)
 
-  // Fetch user profile data
+  // Fetch user profile data (for name display only)
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -29,36 +30,26 @@ export default function AuthenticatedLayout({
         }
       } catch (error) {
         console.error('Failed to fetch profile:', error)
-      } finally {
-        setProfileLoading(false)
       }
     }
 
-    if (!isLoading) {
+    if (!isLoading && userType) {
       fetchProfile()
     }
-  }, [isLoading])
+  }, [isLoading, userType])
 
-  // Community User Navigation
-  const communityNavItems = [
-    { name: 'Home', href: '/home', icon: '🏠' },
-    { name: 'Profile', href: '/profile', icon: '👤' },
-    { name: 'Discover', href: '/discover', icon: '🔍' },
-    { name: 'Favorites', href: '/favorites', icon: '❤️' },
-  ]
+  const handlePostCreated = () => {
+    console.log('New post created - home page should refresh')
+  }
 
-  // Business User Navigation
-  const businessNavItems = [
-    { name: 'Home', href: '/home', icon: '🏠' },
-    { name: 'Profile', href: '/profile', icon: '👤' },
-    { name: 'Analytics Dashboard', href: '/analytics', icon: '📊' },
-    { name: 'Discover', href: '/discover', icon: '🔍' },
-    { name: 'Favorites', href: '/favorites', icon: '❤️' },
-  ]
+  // Debug logging
+  console.log('🔍 LAYOUT DEBUG:', {
+    userTypeFromHook: userType,
+    userProfile: userProfile,
+    shouldShowCreatePost: userType === 'business'
+  })
 
-  const currentNavItems = userType === 'business' ? businessNavItems : communityNavItems
-
-  if (isLoading || profileLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen mediterranean-bg flex">
         <div className="w-64 bg-[#FFFBF0] border-r border-gray-200 animate-pulse">
@@ -74,6 +65,29 @@ export default function AuthenticatedLayout({
     )
   }
 
+  // Navigation items - USE userType FROM HOOK
+  const communityNavItems = [
+    { name: 'Home', href: '/home', icon: '🏠' },
+    { name: 'Profile', href: '/profile', icon: '👤' },
+    { name: 'Discover', href: '/discover', icon: '🔍' },
+    { name: 'Favorites', href: '/favorites', icon: '❤️' },
+  ]
+
+  const businessNavItems = [
+    { name: 'Home', href: '/home', icon: '🏠' },
+    { name: 'Profile', href: '/profile', icon: '👤' },
+    { name: 'Analytics Dashboard', href: '/analytics', icon: '📊' },
+    { name: 'Discover', href: '/discover', icon: '🔍' },
+    { name: 'Favorites', href: '/favorites', icon: '❤️' },
+  ]
+
+  const currentNavItems = userType === 'business' ? businessNavItems : communityNavItems
+  
+  // Display name - USE userType FROM HOOK
+  const displayName = userType === 'business' 
+    ? userProfile?.businessName || 'Your Business' 
+    : `${userProfile?.firstName || 'User'} ${userProfile?.lastName || 'Name'}`
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen mediterranean-bg flex">
@@ -88,21 +102,16 @@ export default function AuthenticatedLayout({
           {/* User Profile Section */}
           <div className="p-6 border-b border-gray-200">
             <div className="flex flex-col items-center space-y-3">
-              {/* Default Profile Picture */}
               <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
                 <svg className="w-8 h-8 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                 </svg>
               </div>
               
-              {/* User/Business Name - Now using real data */}
               <div className="text-center">
-                <p className="text-sm font-medium text-gray-900">
-                  {userType === 'business' 
-                    ? userProfile?.businessName || 'Your Business' 
-                    : `${userProfile?.firstName || 'User'} ${userProfile?.lastName || 'Name'}`}
-                </p>
+                <p className="text-sm font-medium text-gray-900">{displayName}</p>
                 <p className="text-xs text-gray-500 mt-1">
+                  {/* USE userType FROM HOOK */}
                   {userType === 'business' ? 'Business Account' : 'Community Member'}
                 </p>
               </div>
@@ -133,7 +142,20 @@ export default function AuthenticatedLayout({
             </ul>
           </nav>
 
-          {/* Settings at the bottom */}
+          {/* Create Post Button for Business Users - USE userType FROM HOOK */}
+          {userType === 'business' && (
+            <div className="p-4 border-t border-gray-200">
+              <button
+                onClick={() => setIsCreatePostModalOpen(true)}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-[#8B7355] text-white rounded-lg font-medium hover:bg-[#7A6347] transition"
+              >
+                <span className="text-lg">📝</span>
+                <span>Create Post</span>
+              </button>
+            </div>
+          )}
+
+          {/* Settings */}
           <div className="p-4 border-t border-gray-200">
             <ul className="space-y-2">
               <li>
@@ -151,7 +173,6 @@ export default function AuthenticatedLayout({
               </li>
             </ul>
             
-            {/* Footer */}
             <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="text-xs text-gray-500 text-center">
                 © 2025 Local Artisans
@@ -162,65 +183,44 @@ export default function AuthenticatedLayout({
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col">
-          {/* Top Bar with darker yellow-brown background */}
+          {/* Top Bar */}
           <header className="bg-[#B89B6A] border-b border-[#A68C5F] px-6 py-4">
             <div className="flex justify-between items-center">
-              {/* Header Title - Now using real data */}
+              {/* Header Title - USE userType FROM HOOK */}
               <h1 className="text-xl font-semibold text-white">
                 {userType === 'business' 
                   ? `${userProfile?.businessName || 'Business'} Dashboard` 
                   : 'Community Hub'}
               </h1>
               
-              {/* Right side emoji icons */}
               <div className="flex items-center space-x-4">
-                {/* Notifications - Bell emoji */}
                 <button className="relative p-2 text-white hover:text-gray-100 hover:bg-[#A68C5F] rounded-lg transition">
                   <span className="text-xl">🔔</span>
-                  {/* Notification badge - hidden for now */}
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">
-                    3
-                  </span>
                 </button>
 
-                {/* Messages - Envelope emoji */}
                 <button className="relative p-2 text-white hover:text-gray-100 hover:bg-[#A68C5F] rounded-lg transition">
                   <span className="text-xl">✉️</span>
-                  {/* Message badge - hidden for now */}
-                  <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">
-                    5
-                  </span>
                 </button>
 
-                {/* Custom Themed UserButton */}
                 <UserButton
                   appearance={{
                     elements: {
-                      // Root container styling
                       rootBox: "flex",
-                      // Avatar/button styling
                       userButtonTrigger: "flex select-none items-center justify-center rounded-lg bg-[#8B7355] hover:bg-[#7A6347] transition",
                       userButtonBox: "flex",
                       userButtonOuterIdentifier: "text-sm text-white",
-                      // Dropdown menu styling
                       card: "bg-[#FFFBF0] border border-[#8B7355] shadow-lg rounded-lg",
-                      header: "hidden", // Hides the "Signed in as" header
+                      header: "hidden",
                       headerTitle: "text-gray-800",
                       headerSubtitle: "text-gray-600",
-                      // Menu items styling
                       menuButton: "text-gray-700 hover:bg-[#8B7355] hover:text-white rounded-lg transition",
                       menuList: "space-y-1 p-2",
-                      // Footer styling (removes "Secured by Clerk")
                       footer: "hidden",
-                      // Profile section in dropdown
                       userPreview: "border-b border-gray-200 pb-3 mb-2",
                       userPreviewMainIdentifier: "text-gray-800 font-medium",
                       userPreviewSecondaryIdentifier: "text-gray-600 text-sm",
-                      // Active states
                       active: "bg-[#8B7355] text-white",
-                      // Danger items (like delete account)
                       danger: "text-red-600 hover:bg-red-50 hover:text-red-700",
-                      // Avatar in dropdown
                       avatarBox: "w-8 h-8",
                     },
                     variables: {
@@ -242,6 +242,13 @@ export default function AuthenticatedLayout({
             {children}
           </main>
         </div>
+
+        {/* Create Post Modal */}
+        <CreatePostModal
+          isOpen={isCreatePostModalOpen}
+          onClose={() => setIsCreatePostModalOpen(false)}
+          onPostCreated={handlePostCreated}
+        />
       </div>
     </ProtectedRoute>
   )
