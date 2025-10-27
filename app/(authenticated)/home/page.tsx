@@ -4,6 +4,7 @@
 import { useUserType } from '../../../lib/hooks/useUserType'
 import { useState, useEffect } from 'react'
 import PostCard from '../../../components/PostCard'
+import EditPostModal from '../../../components/EditPostModal'
 
 interface Post {
   id: string
@@ -28,6 +29,8 @@ export default function HomePage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [postsLoading, setPostsLoading] = useState(true)
   const [profileLoading, setProfileLoading] = useState(true)
+  const [editingPost, setEditingPost] = useState<Post | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   // Fetch user profile
   useEffect(() => {
@@ -76,11 +79,22 @@ export default function HomePage() {
     setPosts(posts.filter(post => post.id !== postId))
   }
 
-  // Handle post edit (placeholder for now)
+  // Handle post edit
   const handleEditPost = (post: Post) => {
-    console.log('Edit post:', post)
-    // TODO: Open edit modal with post data
-    alert('Edit functionality coming soon! Post: ' + post.title)
+    setEditingPost(post)
+    setIsEditModalOpen(true)
+  }
+
+  // Handle post update
+  const handlePostUpdated = () => {
+    console.log('Post updated - refreshing posts...')
+    fetchPosts() // Refresh the posts list
+  }
+
+  // Close edit modal
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false)
+    setEditingPost(null)
   }
 
   // Expose refresh function to window for layout to access
@@ -104,6 +118,14 @@ export default function HomePage() {
 
   return (
     <div className="max-w-4xl">
+      {/* Edit Post Modal */}
+      <EditPostModal
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        onPostUpdated={handlePostUpdated}
+        post={editingPost}
+      />
+
       {/* Posts Feed - No container, just posts on the pale yellow background */}
       <div>
         {postsLoading ? (

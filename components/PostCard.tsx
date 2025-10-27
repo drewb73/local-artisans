@@ -66,7 +66,6 @@ export default function PostCard({ post, onEdit, onDelete }: PostCardProps) {
       console.log('📨 Delete response status:', response.status)
       console.log('📨 Delete response ok:', response.ok)
       
-      // Get the response text first to see what we're getting
       const responseText = await response.text()
       console.log('📨 Raw response:', responseText)
       
