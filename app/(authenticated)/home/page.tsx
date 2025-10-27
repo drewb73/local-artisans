@@ -49,22 +49,35 @@ export default function HomePage() {
   }, [isLoading])
 
   // Fetch posts
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await fetch('/api/posts')
-        if (response.ok) {
-          const data = await response.json()
-          setPosts(data.posts || [])
-        }
-      } catch (error) {
-        console.error('Failed to fetch posts:', error)
-      } finally {
-        setPostsLoading(false)
+  const fetchPosts = async () => {
+    try {
+      setPostsLoading(true)
+      const response = await fetch('/api/posts')
+      if (response.ok) {
+        const data = await response.json()
+        setPosts(data.posts || [])
       }
+    } catch (error) {
+      console.error('Failed to fetch posts:', error)
+    } finally {
+      setPostsLoading(false)
     }
+  }
 
+  // Initial posts fetch
+  useEffect(() => {
     fetchPosts()
+  }, [])
+
+  // Function to refresh posts (will be passed to layout)
+  const refreshPosts = () => {
+    fetchPosts()
+  }
+
+  // Expose refresh function to window for layout to access
+  useEffect(() => {
+    // @ts-ignore
+    window.refreshHomePagePosts = refreshPosts
   }, [])
 
   if (isLoading || profileLoading) {

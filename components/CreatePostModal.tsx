@@ -52,7 +52,11 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
         // Reset form and close modal
         setTitle('')
         setContent('')
+        
+        // ✅ IMPORTANT: Trigger the refresh of posts
         onPostCreated()
+        
+        // Close modal
         onClose()
       } else {
         setError(data.error || 'Failed to create post')

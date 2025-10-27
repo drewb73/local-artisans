@@ -17,9 +17,10 @@ export default function AuthenticatedLayout({
   const pathname = usePathname()
   const { userType, isLoading } = useUserType()
   const [userProfile, setUserProfile] = useState<any>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false)
 
-  // Fetch user profile data (for name display only)
+  // Fetch user profile data
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -30,26 +31,24 @@ export default function AuthenticatedLayout({
         }
       } catch (error) {
         console.error('Failed to fetch profile:', error)
+      } finally {
+        setProfileLoading(false)
       }
     }
 
-    if (!isLoading && userType) {
+    if (!isLoading) {
       fetchProfile()
     }
-  }, [isLoading, userType])
+  }, [isLoading])
 
+  // Handle post creation - refresh the page to show new posts
   const handlePostCreated = () => {
-    console.log('New post created - home page should refresh')
+    console.log('Post created - refreshing page...')
+    // Simple and reliable: reload the page to show the new post
+    window.location.reload()
   }
 
-  // Debug logging
-  console.log('🔍 LAYOUT DEBUG:', {
-    userTypeFromHook: userType,
-    userProfile: userProfile,
-    shouldShowCreatePost: userType === 'business'
-  })
-
-  if (isLoading) {
+  if (isLoading || profileLoading) {
     return (
       <div className="min-h-screen mediterranean-bg flex">
         <div className="w-64 bg-[#FFFBF0] border-r border-gray-200 animate-pulse">
@@ -65,7 +64,7 @@ export default function AuthenticatedLayout({
     )
   }
 
-  // Navigation items - USE userType FROM HOOK
+  // Navigation items
   const communityNavItems = [
     { name: 'Home', href: '/home', icon: '🏠' },
     { name: 'Profile', href: '/profile', icon: '👤' },
@@ -82,8 +81,6 @@ export default function AuthenticatedLayout({
   ]
 
   const currentNavItems = userType === 'business' ? businessNavItems : communityNavItems
-  
-  // Display name - USE userType FROM HOOK
   const displayName = userType === 'business' 
     ? userProfile?.businessName || 'Your Business' 
     : `${userProfile?.firstName || 'User'} ${userProfile?.lastName || 'Name'}`
@@ -111,7 +108,6 @@ export default function AuthenticatedLayout({
               <div className="text-center">
                 <p className="text-sm font-medium text-gray-900">{displayName}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {/* USE userType FROM HOOK */}
                   {userType === 'business' ? 'Business Account' : 'Community Member'}
                 </p>
               </div>
@@ -142,7 +138,7 @@ export default function AuthenticatedLayout({
             </ul>
           </nav>
 
-          {/* Create Post Button for Business Users - USE userType FROM HOOK */}
+          {/* Create Post Button for Business Users */}
           {userType === 'business' && (
             <div className="p-4 border-t border-gray-200">
               <button
@@ -186,7 +182,6 @@ export default function AuthenticatedLayout({
           {/* Top Bar */}
           <header className="bg-[#B89B6A] border-b border-[#A68C5F] px-6 py-4">
             <div className="flex justify-between items-center">
-              {/* Header Title - USE userType FROM HOOK */}
               <h1 className="text-xl font-semibold text-white">
                 {userType === 'business' 
                   ? `${userProfile?.businessName || 'Business'} Dashboard` 
