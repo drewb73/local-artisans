@@ -21,6 +21,10 @@ interface Post {
       avatarUrl: string | null
     }
   }
+  _count?: {
+    likes: number
+    comments: number
+  }
 }
 
 export default function HomePage() {
@@ -74,6 +78,12 @@ export default function HomePage() {
     fetchPosts()
   }, [])
 
+  // Refresh posts function - can be called from child components
+  const refreshPosts = async () => {
+    console.log('🔄 Refreshing posts...')
+    await fetchPosts()
+  }
+
   // Handle post deletion
   const handleDeletePost = (postId: string) => {
     setPosts(posts.filter(post => post.id !== postId))
@@ -88,7 +98,7 @@ export default function HomePage() {
   // Handle post update
   const handlePostUpdated = () => {
     console.log('Post updated - refreshing posts...')
-    fetchPosts() // Refresh the posts list
+    refreshPosts()
   }
 
   // Close edit modal
@@ -100,7 +110,7 @@ export default function HomePage() {
   // Expose refresh function to window for layout to access
   useEffect(() => {
     // @ts-ignore
-    window.refreshHomePagePosts = fetchPosts
+    window.refreshHomePagePosts = refreshPosts
   }, [])
 
   if (isLoading || profileLoading) {
@@ -155,6 +165,7 @@ export default function HomePage() {
                 post={post}
                 onDelete={handleDeletePost}
                 onEdit={handleEditPost}
+                onRefreshPosts={refreshPosts}
               />
             ))}
           </div>

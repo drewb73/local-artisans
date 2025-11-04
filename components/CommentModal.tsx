@@ -43,9 +43,10 @@ interface CommentModalProps {
   onClose: () => void
   postId: string
   postTitle: string
+  onCommentsChanged?: () => void // Add callback for when comments change
 }
 
-export default function CommentModal({ isOpen, onClose, postId, postTitle }: CommentModalProps) {
+export default function CommentModal({ isOpen, onClose, postId, postTitle, onCommentsChanged }: CommentModalProps) {
   const { user } = useUser()
   const [comment, setComment] = useState('')
   const [comments, setComments] = useState<Comment[]>([])
@@ -124,6 +125,8 @@ export default function CommentModal({ isOpen, onClose, postId, postTitle }: Com
         const data = await response.json()
         setComments(prev => [data.comment, ...prev])
         setComment('')
+        // Trigger refresh callback
+        onCommentsChanged?.()
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Failed to post comment')
@@ -168,6 +171,8 @@ export default function CommentModal({ isOpen, onClose, postId, postTitle }: Com
         ))
         setEditingComment(null)
         setEditContent('')
+        // Trigger refresh callback
+        onCommentsChanged?.()
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Failed to update comment')
@@ -196,6 +201,8 @@ export default function CommentModal({ isOpen, onClose, postId, postTitle }: Com
 
       if (response.ok) {
         setComments(prev => prev.filter(c => c.id !== commentId))
+        // Trigger refresh callback
+        onCommentsChanged?.()
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Failed to delete comment')
@@ -392,45 +399,50 @@ export default function CommentModal({ isOpen, onClose, postId, postTitle }: Com
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-500">No comments yet. Be the first to comment!</p>
-            </div>
-          )}
-        </div>
-
-        {/* Comment Input */}
-        <div className="p-6 border-t border-gray-200">
-          <form onSubmit={handleSubmitComment} className="space-y-3">
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{error}</p>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">No comments yet. Be the first to comment!</p>
+                      </div>
+                    )}
+                  </div>
+          
+                  {/* Comment input */}
+                  <div className="p-6 border-t border-gray-200">
+                    {error && <p className="text-sm text-red-500 mb-2">{error}</p>}
+                    {user ? (
+                      <form onSubmit={handleSubmitComment} className="space-y-3">
+                        <textarea
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                          rows={3}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B7355] focus:border-transparent resize-none"
+                          placeholder={`Add a comment to "${postTitle || (post?.title ?? '')}"`}
+                          maxLength={500}
+                        />
+                        <div className="flex justify-end space-x-2">
+                          <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                          >
+                            Close
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={!comment.trim() || isSubmitting}
+                            className="px-4 py-2 bg-[#8B7355] text-white rounded-lg hover:bg-[#7A6347] transition disabled:opacity-50"
+                          >
+                            {isSubmitting ? 'Posting...' : 'Post Comment'}
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="text-sm text-gray-600">
+                        <p>Please sign in to post a comment.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            )}
-            
-            <div className="flex space-x-3">
-              <input
-                type="text"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Write a comment..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B7355] focus:border-transparent"
-                maxLength={500}
-              />
-              <button
-                type="submit"
-                disabled={isSubmitting || !comment.trim()}
-                className="px-4 py-2 bg-[#8B7355] text-white rounded-lg font-medium hover:bg-[#7A6347] transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? 'Posting...' : 'Post'}
-              </button>
-            </div>
-            <p className="text-xs text-gray-500 text-center">
-              {comment.length}/500 characters
-            </p>
-          </form>
-        </div>
-      </div>
-    </div>
-  )
-}
+            )
+          }

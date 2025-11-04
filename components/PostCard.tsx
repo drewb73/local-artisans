@@ -30,9 +30,10 @@ interface PostCardProps {
   post: Post
   onEdit?: (post: Post) => void
   onDelete?: (postId: string) => void
+  onRefreshPosts?: () => void // Add refresh function prop
 }
 
-export default function PostCard({ post, onEdit, onDelete }: PostCardProps) {
+export default function PostCard({ post, onEdit, onDelete, onRefreshPosts }: PostCardProps) {
   const { userType } = useUserType()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -151,6 +152,13 @@ export default function PostCard({ post, onEdit, onDelete }: PostCardProps) {
 
   const handleCommentClick = () => {
     setIsCommentModalOpen(true)
+  }
+
+  // Refresh posts when comments change
+  const handleCommentsChanged = () => {
+    console.log('🔄 Comments changed - refreshing posts...')
+    onRefreshPosts?.() // Refresh the posts list to update comment counts
+    fetchLikeStatus() // Refresh like status as well
   }
 
   return (
@@ -296,6 +304,7 @@ export default function PostCard({ post, onEdit, onDelete }: PostCardProps) {
         onClose={() => setIsCommentModalOpen(false)}
         postId={post.id}
         postTitle={post.title}
+        onCommentsChanged={handleCommentsChanged}
       />
 
       {/* Close dropdown when clicking outside */}
