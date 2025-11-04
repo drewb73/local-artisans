@@ -18,7 +18,9 @@ model User {
   
   // Relations
   profile Profile?
-  posts   Post[]    // Make sure this line exists
+  posts   Post[]    
+  likes   Like[]     // Add this
+  comments Comment[] // Add this
   
   @@map("users")
 }
@@ -50,8 +52,39 @@ model Post {
   // Relationships
   userId    String
   user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes     Like[]    // Add this
+  comments  Comment[] // Add this
   
   @@map("posts")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, postId])
+  @@map("likes")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  @@map("comments")
 }
 
 enum UserType {

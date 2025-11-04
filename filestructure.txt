@@ -1,0 +1,72 @@
+|-- .env
+|-- .env.local
+|-- .gitignore
+|-- app
+    |-- (authenticated)
+        |-- analytics
+            |-- page.tsx
+        |-- debug
+            |-- page.tsx
+        |-- discover
+            |-- page.tsx
+        |-- favorites
+            |-- page.tsx
+        |-- home
+            |-- page.tsx
+        |-- layout.tsx
+        |-- profile
+            |-- page.tsx
+        |-- settings
+            |-- page.tsx
+    |-- api
+        |-- posts
+            |-- route.ts
+            |-- [id]
+                |-- comments
+                    |-- route.ts
+                    |-- [commentID]
+                        |-- route.ts
+                |-- like
+                    |-- route.ts
+                |-- route.ts
+        |-- profile
+            |-- route.ts
+    |-- favicon.ico
+    |-- globals.css
+    |-- layout.tsx
+    |-- page.tsx
+    |-- sign-in
+        |-- [[...sign-in]]
+            |-- page.tsx
+    |-- sign-up
+        |-- [[...sign-up]]
+            |-- page.tsx
+|-- components
+    |-- CommentModal.tsx
+    |-- CreatePostModal.tsx
+    |-- EditPostModal.tsx
+    |-- PostCard.tsx
+    |-- ProtectedRoute.tsx
+|-- eslint.config.mjs
+|-- lib
+    |-- database.ts
+    |-- hooks
+        |-- useSessionCheck.ts
+        |-- useUserType.ts
+|-- middleware.ts
+|-- next-env.d.ts
+|-- next.config.ts
+|-- package-lock.json
+|-- package.json
+|-- postcss.config.mjs
+|-- prisma
+    |-- schema.prisma
+|-- prisma.config.ts
+|-- public
+    |-- file.svg
+    |-- globe.svg
+    |-- next.svg
+    |-- vercel.svg
+    |-- window.svg
+|-- README.md
+|-- tsconfig.json

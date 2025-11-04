@@ -11,6 +11,13 @@ export async function GET(request: NextRequest) {
           include: {
             profile: true
           }
+        },
+        // Include like and comment counts
+        _count: {
+          select: {
+            likes: true,
+            comments: true
+          }
         }
       },
       orderBy: {

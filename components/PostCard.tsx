@@ -1,8 +1,9 @@
 // components/PostCard.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useUserType } from '../lib/hooks/useUserType'
+import CommentModal from './CommentModal'
 
 interface Post {
   id: string
@@ -19,6 +20,10 @@ interface Post {
       avatarUrl: string | null
     }
   }
+  _count?: {
+    likes: number
+    comments: number
+  }
 }
 
 interface PostCardProps {
@@ -32,6 +37,28 @@ export default function PostCard({ post, onEdit, onDelete }: PostCardProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState('')
+  const [isLiked, setIsLiked] = useState(false)
+  const [likeCount, setLikeCount] = useState(post._count?.likes || 0)
+  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false)
+  const [isLiking, setIsLiking] = useState(false)
+
+  // Fetch like status when component mounts
+  useEffect(() => {
+    fetchLikeStatus()
+  }, [post.id])
+
+  const fetchLikeStatus = async () => {
+    try {
+      const response = await fetch(`/api/posts/${post.id}/like`)
+      if (response.ok) {
+        const data = await response.json()
+        setIsLiked(data.liked)
+        setLikeCount(data.likeCount)
+      }
+    } catch (error) {
+      console.error('Error fetching like status:', error)
+    }
+  }
 
   // Format date as MM/DD/YYYY
   const formatDate = (dateString: string) => {
@@ -95,6 +122,35 @@ export default function PostCard({ post, onEdit, onDelete }: PostCardProps) {
   const handleEdit = () => {
     onEdit?.(post)
     setIsDropdownOpen(false)
+  }
+
+  const handleLike = async () => {
+    if (isLiking) return
+    
+    setIsLiking(true)
+    try {
+      const response = await fetch(`/api/posts/${post.id}/like`, {
+        method: 'POST',
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setIsLiked(data.liked)
+        setLikeCount(prev => data.liked ? prev + 1 : prev - 1)
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Failed to like post')
+      }
+    } catch (error: any) {
+      console.error('Error toggling like:', error)
+      setError('Failed to like post. Please try again.')
+    } finally {
+      setIsLiking(false)
+    }
+  }
+
+  const handleCommentClick = () => {
+    setIsCommentModalOpen(true)
   }
 
   return (
@@ -181,9 +237,66 @@ export default function PostCard({ post, onEdit, onDelete }: PostCardProps) {
       <h3 className="text-lg font-bold text-gray-800 mb-3">{post.title}</h3>
 
       {/* Post Content */}
-      <div className="text-gray-600 whitespace-pre-wrap">
+      <div className="text-gray-600 whitespace-pre-wrap mb-4">
         {post.content}
       </div>
+
+      {/* Like and Comment Buttons */}
+      <div className="flex items-center space-x-6 pt-4 border-t border-gray-100">
+        {/* Like Button */}
+        <button
+          onClick={handleLike}
+          disabled={isLiking}
+          className={`flex items-center space-x-2 transition-colors ${
+            isLiked 
+              ? 'text-red-500 hover:text-red-600' 
+              : 'text-gray-500 hover:text-gray-700'
+          } disabled:opacity-50`}
+        >
+          <svg 
+            className="w-5 h-5" 
+            fill={isLiked ? "currentColor" : "none"} 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
+            />
+          </svg>
+          <span className="text-sm font-medium">
+            {likeCount} {likeCount === 1 ? 'Like' : 'Likes'}
+          </span>
+        </button>
+
+        {/* Comment Button */}
+        <button
+          onClick={handleCommentClick}
+          className="flex items-center space-x-2 text-gray-500 hover:text-gray-700 transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" 
+            />
+          </svg>
+          <span className="text-sm font-medium">
+            {post._count?.comments || 0} {post._count?.comments === 1 ? 'Comment' : 'Comments'}
+          </span>
+        </button>
+      </div>
+
+      {/* Comment Modal */}
+      <CommentModal
+        isOpen={isCommentModalOpen}
+        onClose={() => setIsCommentModalOpen(false)}
+        postId={post.id}
+        postTitle={post.title}
+      />
 
       {/* Close dropdown when clicking outside */}
       {isDropdownOpen && (
